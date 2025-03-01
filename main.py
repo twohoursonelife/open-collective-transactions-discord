@@ -21,7 +21,7 @@ SQL_CONNECTION = sqlite3.connect(SQLITE3_PATH)
 
 
 def main() -> None:
-    drop_transaction_table(SQL_CONNECTION) # Debug
+    # drop_transaction_table(SQL_CONNECTION) # Debug
     setup_database(SQL_CONNECTION)
 
     lookback_time = datetime.now(UTC) - timedelta(hours=LOOKBACK_HOURS)
