@@ -14,8 +14,8 @@ OC_API_KEY = os.getenv("OC_API_KEY")
 OC_ACCOUNT_SLUG = os.getenv("OC_ACCOUNT_SLUG", "twohoursonelife")
 OC_API_ENDPOINT = "https://api.opencollective.com/graphql/v2"
 RFC3339_ISO8601_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-SQLITE3_PATH = "financials.db"
-LOOKBACK_HOURS = int(os.getenv("LOOKBACK_HOURS", "200"))
+SQLITE3_PATH = "data/financials.db"
+LOOKBACK_HOURS = int(os.getenv("LOOKBACK_HOURS", "12"))
 
 SQL_CONNECTION = sqlite3.connect(SQLITE3_PATH)
 
@@ -36,7 +36,7 @@ def main() -> None:
         send_discord_transactions(new_transactions)
         print(f"Saved and sent {len(new_transactions)} new transactions.")
         return
-    
+
     print(f"No new transactions to send.")
 
 

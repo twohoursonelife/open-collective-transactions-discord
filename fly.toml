@@ -1,8 +1,15 @@
 app = 'financials'
 primary_region = 'iad'
 
-[build]
+# [[vm]]
+# memory = "256mb"
+# size = 'shared-cpu-1x'
 
-[[vm]]
-  size = 'shared-cpu-1x'
-  memory = "256mb"
+# [[mounts]]
+# destination = "/app/data"
+# source = "financials"
+
+# Fly.io's scheduling is a bit jank.
+# To release an update, destroy the old machine and create it new.
+# fly machine destroy
+# fly machine run --region iad --volume financials:/app/data --schedule hourly .
