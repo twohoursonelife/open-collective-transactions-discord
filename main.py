@@ -216,13 +216,11 @@ def send_discord_transactions(transactions: pd.DataFrame) -> None:
 
     webhook = SyncWebhook.from_url(WEBHOOK_URL)
 
-    time = datetime.now()
     webhook.send(
         content=message,
         username="Open Collective",
         avatar_url="https://cdn.discordapp.com/avatars/948569181513724024/dab2d4c4ae7f5b2253a97dde3ef09a67.webp?size=80",
     )
-    print(f"Took {datetime.now() - time} to send Discord webhook.")
 
 
 if __name__ == "__main__":
