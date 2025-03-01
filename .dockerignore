@@ -1,3 +1,9 @@
 .gitignore
 .venv
 README.md
+.env
+.python_version
+financials.db
+fly.toml
+pyproject.toml
+image.png

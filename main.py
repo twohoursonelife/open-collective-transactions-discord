@@ -11,19 +11,20 @@ load_dotenv()
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 OC_API_KEY = os.getenv("OC_API_KEY")
 
+OC_ACCOUNT_SLUG = os.getenv("OC_ACCOUNT_SLUG", "twohoursonelife")
 OC_API_ENDPOINT = "https://api.opencollective.com/graphql/v2"
-OC_ACCOUNT_SLUG = "twohoursonelife"
-SQLITE3_PATH = "financials.db"
 RFC3339_ISO8601_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+SQLITE3_PATH = "financials.db"
+LOOKBACK_HOURS = int(os.getenv("LOOKBACK_HOURS", "200"))
 
 SQL_CONNECTION = sqlite3.connect(SQLITE3_PATH)
 
 
 def main() -> None:
-    drop_transaction_table(SQL_CONNECTION)
+    drop_transaction_table(SQL_CONNECTION) # Debug
     setup_database(SQL_CONNECTION)
 
-    lookback_time = datetime.now(UTC) - timedelta(days=20)
+    lookback_time = datetime.now(UTC) - timedelta(hours=LOOKBACK_HOURS)
 
     latest_transactions = get_open_collective_transactions(lookback_time)
     known_transactions = get_known_transactions(lookback_time, SQL_CONNECTION)
@@ -33,6 +34,10 @@ def main() -> None:
     if not new_transactions.empty:
         save_transactions(new_transactions, SQL_CONNECTION)
         send_discord_transactions(new_transactions)
+        print(f"Saved and sent {len(new_transactions)} new transactions.")
+        return
+    
+    print(f"No new transactions to send.")
 
 
 def sql_query(query: str, connection: sqlite3.Connection) -> list:
@@ -194,7 +199,7 @@ def get_known_transactions(
 
 def send_discord_transactions(transactions: pd.DataFrame) -> None:
     message = ""
-    # Reversed order to match chronological order of messages
+    # Reversed order to match chronological order of messages.
     for index, row in transactions[::-1].iterrows():
 
         dollar_amount = row["amount_cents"] / 100
@@ -207,7 +212,7 @@ def send_discord_transactions(transactions: pd.DataFrame) -> None:
         return
 
     if len(message) >= 2000:
-        raise Exception("Edge case, to many donors!")
+        raise Exception("Edge case, too many donors!")
 
     webhook = SyncWebhook.from_url(WEBHOOK_URL)
 

@@ -1,7 +1,7 @@
 [project]
 name = "financials"
 version = "0.1.0"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
     "discord>=2.3.2",
     "pandas>=2.2.3",
