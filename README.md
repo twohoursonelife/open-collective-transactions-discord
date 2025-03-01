@@ -1,2 +1,2 @@
-# opencollective-contributions-discord
-Stream Open Collective contributions into a Discord channel via webhooks.
+# open-collective-transactions-discord
+Stream Open Collective transactions into a Discord channel via webhooks.
