@@ -216,8 +216,8 @@ def send_discord_transactions(transactions: pd.DataFrame) -> None:
 
     webhook.send(
         content=message,
-        username="Open Collective",
-        avatar_url="https://cdn.discordapp.com/avatars/948569181513724024/dab2d4c4ae7f5b2253a97dde3ef09a67.webp?size=80",
+        username="Two Hours One Life - Open Collective",
+        avatar_url="https://cdn.discordapp.com/icons/423293333864054833/a_52ab7acbcff9db8362d80364d4d88667.png?size=80",
     )
 
 
