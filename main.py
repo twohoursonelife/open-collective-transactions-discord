@@ -37,7 +37,7 @@ def main() -> None:
         print(f"Saved and sent {len(new_transactions)} new transactions.")
         return
 
-    print(f"No new transactions to send.")
+    print("No new transactions to send.")
 
 
 def sql_query(query: str, connection: sqlite3.Connection) -> list:
@@ -81,7 +81,6 @@ def delete_all_transactions(connection: sqlite3.Connection) -> None:
 
 
 def add_dummy_new_transactions(data: pd.DataFrame) -> pd.DataFrame:
-
     dummy_transactions = pd.DataFrame(
         [
             [
@@ -201,7 +200,6 @@ def send_discord_transactions(transactions: pd.DataFrame) -> None:
     message = ""
     # Reversed order to match chronological order of messages.
     for index, row in transactions[::-1].iterrows():
-
         dollar_amount = row["amount_cents"] / 100
         donor = row["from_account"]
         donation_time = int(row["created_at"].floor("s").timestamp())
