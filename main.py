@@ -24,7 +24,9 @@ def main() -> None:
     # drop_transaction_table(SQL_CONNECTION) # Debug
     setup_database(SQL_CONNECTION)
 
-    lookback_time = datetime.now(UTC) - timedelta(hours=LOOKBACK_HOURS)
+    lookback_time = get_latest_transaction_time(SQL_CONNECTION)
+    if lookback_time is None:
+        lookback_time = datetime.now(UTC) - timedelta(hours=LOOKBACK_HOURS)
 
     latest_transactions = get_open_collective_transactions(lookback_time)
     known_transactions = get_known_transactions(lookback_time, SQL_CONNECTION)
@@ -45,6 +47,13 @@ def sql_query(query: str, connection: sqlite3.Connection) -> list:
     cursor.execute(query)
     connection.commit()
     return cursor.fetchall()
+
+
+def get_latest_transaction_time(connection: sqlite3.Connection) -> datetime | None:
+    res = sql_query("SELECT MAX(created_at) FROM transactions", connection)
+    if res and res[0][0]:
+        return pd.to_datetime(res[0][0])
+    return None
 
 
 def setup_database(connection: sqlite3.Connection) -> None:
