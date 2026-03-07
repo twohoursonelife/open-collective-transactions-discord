@@ -33,13 +33,16 @@ def main() -> None:
 
     new_transactions = find_new_transactions(latest_transactions, known_transactions)
 
-    if not new_transactions.empty:
-        save_transactions(new_transactions, SQL_CONNECTION)
-        send_discord_transactions(new_transactions)
-        print(f"Saved and sent {len(new_transactions)} new transactions.")
+    if new_transactions.empty:
+        print("No new transactions to send.")
         return
 
-    print("No new transactions to send.")
+    # Order matters, to allow any notification exceptions to occur before
+    # recording the transaction as processed.
+    send_discord_transactions(new_transactions)
+    save_transactions(new_transactions, SQL_CONNECTION)
+
+    print(f"Saved and sent {len(new_transactions)} new transactions.")
 
 
 def sql_query(query: str, connection: sqlite3.Connection) -> list:
