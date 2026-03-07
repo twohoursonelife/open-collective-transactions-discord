@@ -57,7 +57,7 @@ def setup_transaction_table(connection: sqlite3.Connection) -> None:
         id TEXT PRIMARY KEY,
         created_at TEXT,
         from_account TEXT,
-        amount_cents INTERGER);
+        amount_cents INTEGER);
     """
 
     sql_query(
@@ -99,7 +99,7 @@ def add_dummy_new_transactions(data: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def query_open_collective(query: str, variables: str) -> requests.Response:
+def query_open_collective(query: str, variables: dict) -> requests.Response:
     payload = {"query": query, "variables": variables}
     headers = {"Content-Type": "application/json", "Api-key": OC_API_KEY}
 
@@ -114,7 +114,7 @@ def query_open_collective(query: str, variables: str) -> requests.Response:
     return response
 
 
-def get_open_collective_transactions(start_date) -> pd.DataFrame:
+def get_open_collective_transactions(start_date: datetime) -> pd.DataFrame:
     QUERY = """
     query account($account: String, $start_date: DateTime) {
         account(slug: $account) {
@@ -192,7 +192,7 @@ def get_known_transactions(
         "SELECT * FROM transactions WHERE created_at > ?",
         connection,
         parse_dates=["created_at"],
-        params=[lookback_time],
+        params=[str(lookback_time)],
     )
 
 
