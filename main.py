@@ -209,28 +209,36 @@ def get_known_transactions(
 
 
 def send_discord_transactions(transactions: pd.DataFrame) -> None:
-    message = ""
+    messages = []
+    current_message = ""
     # Reversed order to match chronological order of messages.
     for index, row in transactions[::-1].iterrows():
         dollar_amount = row["amount_cents"] / 100
         donor = row["from_account"]
         donation_time = int(row["created_at"].floor("s").timestamp())
 
-        message += f"Thank you **{donor}** for your contribution of **${dollar_amount:.2f}**, <t:{donation_time}:R>! <:love:1104682659537485844>\n"
+        line = f"Thank you **{donor}** for your contribution of **${dollar_amount:.2f}**, <t:{donation_time}:R>! <:love:1104682659537485844>\n"
 
-    if len(message) < 1:
+        if len(current_message) + len(line) >= 2000:
+            messages.append(current_message)
+            current_message = line
+        else:
+            current_message += line
+
+    if current_message:
+        messages.append(current_message)
+
+    if not messages:
         return
-
-    if len(message) >= 2000:
-        raise Exception("Edge case, too many donors!")
 
     webhook = SyncWebhook.from_url(WEBHOOK_URL)
 
-    webhook.send(
-        content=message,
-        username="Two Hours One Life - Open Collective",
-        avatar_url="https://cdn.discordapp.com/icons/423293333864054833/a_52ab7acbcff9db8362d80364d4d88667.png?size=80",
-    )
+    for msg in messages:
+        webhook.send(
+            content=msg,
+            username="Two Hours One Life - Open Collective",
+            avatar_url="https://cdn.discordapp.com/icons/423293333864054833/a_52ab7acbcff9db8362d80364d4d88667.png?size=80",
+        )
 
 
 if __name__ == "__main__":
