@@ -5,6 +5,8 @@ import pandas as pd
 from dotenv import load_dotenv
 from discord import SyncWebhook
 from datetime import datetime, timedelta, UTC
+import boto3
+from botocore.exceptions import ClientError
 
 load_dotenv()
 
@@ -14,35 +16,77 @@ OC_API_KEY = os.getenv("OC_API_KEY")
 OC_ACCOUNT_SLUG = os.getenv("OC_ACCOUNT_SLUG", "twohoursonelife")
 OC_API_ENDPOINT = "https://api.opencollective.com/graphql/v2"
 RFC3339_ISO8601_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-SQLITE3_PATH = "data/financials.db"
+SQLITE3_PATH = "financials.db"
 LOOKBACK_HOURS = int(os.getenv("LOOKBACK_HOURS", "12"))
 
-SQL_CONNECTION = sqlite3.connect(SQLITE3_PATH)
+ENABLE_REMOTE_DB = os.getenv("ENABLE_REMOTE_DB", "true") == "true"
+BUCKET_NAME = os.getenv("BUCKET_NAME", "financials")
+AWS_ENDPOINT_URL_S3 = os.getenv("AWS_ENDPOINT_URL_S3")
+
+# Implicit
+# AWS_ACCESS_KEY_ID
+# AWS_SECRET_ACCESS_KEY
+# AWS_REGION
 
 
 def main() -> None:
-    # drop_transaction_table(SQL_CONNECTION) # Debug
-    setup_database(SQL_CONNECTION)
+    sql_connection = prepare_database()
 
-    lookback_time = get_latest_transaction_time(SQL_CONNECTION)
+    lookback_time = get_latest_transaction_time(sql_connection)
+
     if lookback_time is None:
         lookback_time = datetime.now(UTC) - timedelta(hours=LOOKBACK_HOURS)
 
     latest_transactions = get_open_collective_transactions(lookback_time)
-    known_transactions = get_known_transactions(lookback_time, SQL_CONNECTION)
+    known_transactions = get_known_transactions(lookback_time, sql_connection)
 
     new_transactions = find_new_transactions(latest_transactions, known_transactions)
 
     if new_transactions.empty:
-        print("No new transactions to send.")
+        print("No new transactions to process.")
         return
 
-    # Order matters, to allow any notification exceptions to occur before
-    # recording the transaction as processed.
+    # We want notification exceptions to occur before recording the transaction as processed.
     send_discord_transactions(new_transactions)
-    save_transactions(new_transactions, SQL_CONNECTION)
+    save_transactions(new_transactions, sql_connection)
 
-    print(f"Saved and sent {len(new_transactions)} new transactions.")
+    cleanup_database()
+
+    print(f"Processed {len(new_transactions)} new transactions.")
+
+
+def prepare_database() -> sqlite3.Connection:
+    if not os.path.exists(SQLITE3_PATH) and ENABLE_REMOTE_DB:
+        s3_client = boto3.client(
+            "s3",
+            endpoint_url=AWS_ENDPOINT_URL_S3,
+        )
+
+        try:
+            s3_client.download_file(BUCKET_NAME, "financials.db", SQLITE3_PATH)
+            print("Downloaded DB.")
+
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "404":
+                print("DB not found in bucket. Starting fresh.")
+            else:
+                raise
+
+    sql_connection = sqlite3.connect(SQLITE3_PATH)
+    setup_database(sql_connection)
+
+    return sql_connection
+
+
+def cleanup_database() -> None:
+    if ENABLE_REMOTE_DB:
+        s3_client = boto3.client(
+            "s3",
+            endpoint_url=AWS_ENDPOINT_URL_S3,
+        )
+
+        s3_client.upload_file(SQLITE3_PATH, BUCKET_NAME, "financials.db")
+        print("Uploaded DB")
 
 
 def sql_query(query: str, connection: sqlite3.Connection) -> list:

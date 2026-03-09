@@ -16,6 +16,7 @@ WEBHOOK_URL=
 
 # Settings
 OC_ACCOUNT_SLUG=
+ENABLE_REMOTE_DB=
 
 # See main.py for more settings.
 ```
