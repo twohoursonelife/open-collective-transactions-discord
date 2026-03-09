@@ -201,7 +201,7 @@ def get_known_transactions(
     lookback_time: datetime, connection: sqlite3.Connection
 ) -> pd.DataFrame:
     return pd.read_sql(
-        "SELECT * FROM transactions WHERE created_at > ?",
+        "SELECT * FROM transactions WHERE created_at >= ?",
         connection,
         parse_dates=["created_at"],
         params=[str(lookback_time)],
