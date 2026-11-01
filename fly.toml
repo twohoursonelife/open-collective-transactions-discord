@@ -10,6 +10,5 @@ size = 'shared-cpu-1x'
 
 # Fly.io's scheduling is a bit jank.
 # To release an update:
-# fly deploy
 # fly machine destroy
 # fly machine run --region iad --schedule hourly --restart no .
