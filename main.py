@@ -37,6 +37,9 @@ def main() -> None:
     if lookback_time is None:
         lookback_time = datetime.now(UTC) - timedelta(hours=LOOKBACK_HOURS)
 
+    # The API query drops microseconds, so round the database cutoff down too.
+    # Otherwise, saved donations earlier in that same second look new and get reposted.
+    lookback_time = lookback_time.replace(microsecond=0)
     latest_transactions = get_open_collective_transactions(lookback_time)
     known_transactions = get_known_transactions(lookback_time, sql_connection)
 
@@ -245,9 +248,8 @@ def get_known_transactions(
     lookback_time: datetime, connection: sqlite3.Connection
 ) -> pd.DataFrame:
     return pd.read_sql(
-        "SELECT * FROM transactions WHERE created_at >= ?",
+        "SELECT id FROM transactions WHERE created_at >= ?",
         connection,
-        parse_dates=["created_at"],
         params=[str(lookback_time)],
     )
 

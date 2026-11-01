@@ -1,6 +1,9 @@
 app = 'financials'
 primary_region = 'iad'
 
+[[restart]]
+policy = "never"
+
 [[vm]]
 memory = "256mb"
 size = 'shared-cpu-1x'
@@ -9,4 +12,4 @@ size = 'shared-cpu-1x'
 # To release an update:
 # fly deploy
 # fly machine destroy
-# fly machine run --region iad --schedule hourly .
+# fly machine run --region iad --schedule hourly --restart no .
